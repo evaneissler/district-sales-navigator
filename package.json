@@ -12,7 +12,7 @@
     "@ai-sdk/anthropic": "^3.0.82",
     "@ai-sdk/openai": "^3.0.68",
     "@vercel/postgres": "^0.10.0",
-    "ai": "^6.0.198",
+    "ai": "^6.0.199",
     "drizzle-orm": "^0.45.2",
     "lucide-react": "^1.17.0",
     "next": "16.2.7",
