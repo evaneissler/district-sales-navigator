@@ -1,8 +1,23 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --muted: #64748b;
+  --border: #e2e8f0;
+  --card: #ffffff;
+
+  /* BoosterHub-inspired palette */
+  --brand-navy: #1e3a8a;       /* deep navy, like the HUB circle */
+  --brand-navy-hover: #1e40af;
+  --brand-lime: #84bd00;       /* BOOSTER lime green */
+  --brand-lime-hover: #6fa600;
+  --brand-lime-tint: #f1f8e3;  /* very pale lime, for backgrounds */
+  --brand-navy-tint: #eff3ff;
+
+  --success: #65a30d;
+  --warning: #f59e0b;
+  --danger: #ef4444;
 }
 
 @theme inline {
@@ -10,17 +25,105 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --color-brand-navy: var(--brand-navy);
+  --color-brand-lime: var(--brand-lime);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-body {
+html, body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+@keyframes statusPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.4); }
+}
+.status-dot-pulse {
+  animation: statusPulse 1.4s ease-in-out infinite;
+}
+
+/* ----- Shared inputs ----- */
+.input {
+  width: 100%;
+  background: white;
+  border: 1px solid #e2e8f0;
+  color: #0f172a;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+.input::placeholder { color: #94a3b8; }
+.input:hover { border-color: #cbd5e1; }
+.input:focus {
+  border-color: var(--brand-navy);
+  box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.15);
+}
+
+/* Search box — clean variant with leading icon slot */
+.search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.search > svg {
+  position: absolute;
+  left: 12px;
+  width: 16px;
+  height: 16px;
+  color: #94a3b8;
+  pointer-events: none;
+}
+.search input {
+  padding-left: 38px;
+}
+.search input:focus + .search-clear,
+.search input:not(:placeholder-shown) + .search-clear {
+  opacity: 1;
+  pointer-events: auto;
+}
+.search-clear {
+  position: absolute;
+  right: 8px;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #e2e8f0;
+  color: #475569;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s, background 0.15s;
+  cursor: pointer;
+  border: 0;
+}
+.search-clear:hover { background: #cbd5e1; }
+
+/* Brand primary button */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: var(--brand-navy);
+  color: white;
+  font-weight: 500;
+  padding: 0.625rem 1rem;
+  border-radius: 8px;
+  transition: background 0.15s, transform 0.05s;
+  border: 0;
+}
+.btn-primary:hover:not(:disabled) { background: var(--brand-navy-hover); }
+.btn-primary:active:not(:disabled) { transform: translateY(1px); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }

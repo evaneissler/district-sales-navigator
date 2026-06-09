@@ -1,28 +1,46 @@
 import { storeDistrictInDatabase } from "./steps/database";
 import { enrichContacts } from "./steps/enrich-contacts";
 import { findContacts } from "./steps/find-contacts";
-import { findExistingCustomers } from "./steps/find-existing-customers";
-import { generateCustomEmail } from "./steps/generate-email";
+import { findBoosterClubs } from "./steps/find-booster-clubs";
+import { markComplete, markFailed } from "./steps/finalize";
 import { District } from "./types";
+
+export type RerunStep = "find-contacts" | "enrich-contacts" | "find-booster-clubs";
 
 export async function handleNewDistrict(name: string, city: string, state: string) {
     "use workflow";
-    
-    const district: District = {
-        name: name,
-        city: city,
-        state: state,
-    };
 
-    //await storeDistrictInDatabase(district);
+    const district = await storeDistrictInDatabase({ name, city, state });
 
-    await findContacts(district);
+    try {
+        await findContacts(district);
+        await enrichContacts(district);
+        await findBoosterClubs(district);
+        await markComplete(district.id);
+    } catch (err) {
+        await markFailed(district.id, String(err));
+        throw err;
+    }
 
-    //await enrichContacts(district);
+    return { districtId: district.id, status: "complete" };
+}
 
-    //await findExistingCustomers(district);
+export async function rerunDistrictStep(district: District, step: RerunStep) {
+    "use workflow";
 
-    //await generateCustomEmail(district);
+    try {
+        if (step === "find-contacts") {
+            await findContacts(district);
+        } else if (step === "enrich-contacts") {
+            await enrichContacts(district);
+        } else if (step === "find-booster-clubs") {
+            await findBoosterClubs(district);
+        }
+        await markComplete(district.id);
+    } catch (err) {
+        await markFailed(district.id, String(err));
+        throw err;
+    }
 
-    return { district: district.name, status: "onboarded" };
+    return { districtId: district.id, status: "complete", step };
 }

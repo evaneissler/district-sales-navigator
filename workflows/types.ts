@@ -1,19 +1,15 @@
 export type District = {
+    id: number;
     name: string;
     city: string;
     state: string;
-    contacts?: Contact[];
-    website?: string;
-    existingCustomers?: Customer[];
 };
 
 export type Contact = {
+    id: number;
     name: string;
-    email: string;
-    title: string;
-};
-
-export type Customer = {
-    name: string;
-    industry: string;
+    title: string | null;
+    email: string | null;
+    phone: string | null;
+    linkedinUrl: string | null;
 };
