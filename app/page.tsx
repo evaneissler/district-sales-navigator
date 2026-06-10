@@ -132,8 +132,7 @@ export default function Home() {
       <div className="mb-8">
         <h1 className="text-2xl font-semibold tracking-tight">Sales Intelligence</h1>
         <p className="text-slate-500 mt-1 text-sm">
-          Research a district, surface decision-makers, and see which booster clubs you
-          already work with — in one workflow.
+          Research a district, find decision-makers, and see which booster clubs we already work with.
         </p>
       </div>
 
