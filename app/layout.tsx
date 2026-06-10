@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import Image from "next/image";
+import { Nav } from "./nav";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -45,6 +46,7 @@ export default function RootLayout({
                 Sales Intelligence
               </span>
             </Link>
+            <Nav />
           </div>
         </header>
         <main>{children}</main>
