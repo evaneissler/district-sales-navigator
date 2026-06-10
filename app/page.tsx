@@ -311,12 +311,7 @@ export default function Home() {
                           type="button"
                           onClick={() => restartDistrict(d)}
                           disabled={isBusy || isDeleting}
-                          title={
-                            isBusy
-                              ? "Workflow already running"
-                              : "Re-run research workflow"
-                          }
-                          aria-label={`Re-run research for ${d.name}`}
+                          title="Workflow already running"
                           className="size-8 grid place-items-center rounded-md text-slate-400 hover:text-blue-900 hover:bg-slate-100 disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-400 disabled:cursor-not-allowed transition"
                         >
                           {isRefreshing ? (
