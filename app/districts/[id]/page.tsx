@@ -390,13 +390,18 @@ function ProgressPanel({
 }) {
   if (events.length === 0 && status === "complete") return null;
   const live = status === "researching" || status === "pending";
-  const recent = events.slice(-8).reverse();
+  const ordered = [...events].reverse();
   return (
     <section className="bg-white border border-slate-200 rounded-xl p-5 mb-6">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2 text-sm font-medium text-slate-800">
           <Activity className="size-4 text-blue-700" />
           Progress
+          {ordered.length > 0 && (
+            <span className="text-xs font-normal text-slate-400 tabular-nums">
+              ({ordered.length})
+            </span>
+          )}
         </div>
         {live && (
           <span className="text-xs text-slate-500 inline-flex items-center gap-1.5">
@@ -407,11 +412,11 @@ function ProgressPanel({
           </span>
         )}
       </div>
-      {recent.length === 0 ? (
+      {ordered.length === 0 ? (
         <div className="text-sm text-slate-400">Waiting for the workflow to start…</div>
       ) : (
-        <ol className="space-y-2">
-          {recent.map((e) => (
+        <ol className="space-y-2 max-h-80 overflow-y-auto pr-2 -mr-2">
+          {ordered.map((e) => (
             <li key={e.id} className="flex items-start gap-3 text-sm">
               <EventDot kind={e.kind} />
               <div className="min-w-0 flex-1">
