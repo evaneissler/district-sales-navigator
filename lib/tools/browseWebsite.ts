@@ -13,7 +13,16 @@ const fetchScript = String.raw`
 
   const TARGET = process.env.TARGET_URL;
   const HTTP_TIMEOUT = 20000;
-  const MAX_BODY = 500000;
+  const MAX_BODY = 2000000;
+  // Caller decides how much text to keep: a small cap for navigation (keeps the
+  // agent's context lean across many hops) vs. a large cap for extraction (so we
+  // reach leadership/staff content that sits past a huge site nav menu).
+  const MAX_TEXT = parseInt(process.env.MAX_TEXT || '12000', 10);
+
+  // Many small district sites (esp. *.k12.*.us) ship an incomplete TLS chain —
+  // browsers recover via AIA fetching, but Node rejects it. We're only reading
+  // public pages, so tolerate broken/expired chains rather than lose the lead.
+  const insecureAgent = new https.Agent({ rejectUnauthorized: false });
 
   function httpGet(url, redirects) {
     redirects = redirects || 0;
@@ -22,6 +31,7 @@ const fetchScript = String.raw`
       const isHttps = url.startsWith('https');
       const mod = isHttps ? https : http;
       const req = mod.get(url, {
+        agent: isHttps ? insecureAgent : undefined,
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36',
           'Accept': 'text/html,application/xhtml+xml,*/*',
@@ -58,7 +68,7 @@ const fetchScript = String.raw`
       .replace(/<[^>]+>/g, ' ')
       .replace(/\s+/g, ' ')
       .trim()
-      .substring(0, 8000);
+      .substring(0, MAX_TEXT);
 
     const linkRe = /href=["']([^"'#?][^"']*?)["'][^>]*?>([^<]{0,80})<\/a>/gi;
     const links = [];
@@ -114,37 +124,65 @@ export const createBrowser = tool({
   },
 });
 
+type FetchResult = {
+  status: number;
+  text: string;
+  links: { href: string; text: string }[];
+  error?: string;
+  raw?: string;
+};
+
+// Runs the fetch script in the sandbox. `maxText` controls how much page text
+// comes back — small for navigation, large for extraction. Never throws.
+async function runFetch(
+  sandboxName: string,
+  url: string,
+  maxText: number,
+): Promise<FetchResult> {
+  const sandbox = await Sandbox.get({ name: sandboxName });
+
+  const result = await sandbox.runCommand({
+    cmd: "node",
+    args: ["-e", fetchScript],
+    env: { TARGET_URL: url, MAX_TEXT: String(maxText) },
+  });
+
+  const out = await result.stdout();
+  try {
+    return JSON.parse(out);
+  } catch {
+    return {
+      status: 0,
+      text: "",
+      links: [],
+      error: "Could not read page",
+      raw: (out || "").slice(0, 200),
+    };
+  }
+}
+
+// Full page text for extraction — a generous cap so leadership/staff content
+// that sits past a large site nav menu (e.g. Finalsite sites) isn't truncated.
+export async function fetchPageText(
+  sandboxName: string,
+  url: string,
+): Promise<{ text: string; status: number; error?: string }> {
+  const r = await runFetch(sandboxName, url, 120000);
+  return { text: r.text, status: r.status, error: r.error };
+}
+
 export const browsePage = tool({
   description:
-    "Fetch a URL inside the sandbox and return the page's readable text plus the same-domain links found on it (each { href, text }). Follow those links to navigate the district site. Call createBrowser first.",
+    "Fetch a URL inside the sandbox and return a short text preview plus the same-domain links found on it (each { href, text }). Follow those links to navigate the district site, then call extractContacts on pages that list people. Call createBrowser first.",
 
   inputSchema: z.object({
     sandboxName: z.string(),
     url: z.string(),
   }),
 
-  execute: async ({ sandboxName, url }) => {
-    const sandbox = await Sandbox.get({ name: sandboxName });
-
-    const result = await sandbox.runCommand({
-      cmd: "node",
-      args: ["-e", fetchScript],
-      env: { TARGET_URL: url },
-    });
-
-    const out = await result.stdout();
-    try {
-      return JSON.parse(out);
-    } catch {
-      return {
-        status: 0,
-        text: "",
-        links: [],
-        error: "Could not read page",
-        raw: (out || "").slice(0, 200),
-      };
-    }
-  },
+  // Modest text cap: enough to judge a page and see its links without bloating
+  // the agent's context across many hops. extractContacts re-reads the full page.
+  execute: async ({ sandboxName, url }) => runFetch(sandboxName, url, 12000),
 });
 
 export const closeBrowser = tool({

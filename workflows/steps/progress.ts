@@ -36,7 +36,12 @@ export function summarizeToolCall(call: ToolCallLike): {
         case "browsePage":
             return { kind: "browse", message: `Checking ${shortenUrl(input.url)}` };
         case "extractContacts":
-            return { kind: "extract", message: "Reading page for contacts" };
+            return {
+                kind: "extract",
+                message: input.url
+                    ? `Reading ${shortenUrl(input.url)} for contacts`
+                    : "Reading page for contacts",
+            };
         case "saveContact":
             return {
                 kind: "found",

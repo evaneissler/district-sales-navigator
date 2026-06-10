@@ -96,7 +96,7 @@ export async function findContacts(district: District) {
 
         5. As you go, browsePage the most promising pages and follow their \`links\` deeper toward the business/finance office and staff directory. Track each page's URL — you need it as the source for saveContact. State-specific titles vary: TX districts commonly use "Chief Financial Officer" or "Assistant Superintendent for Business and Finance"; CA districts often use "Chief Business Official"; some districts just have a "Business Manager". Keep clicking through the site until you reach a page that names the business/finance leader.
 
-        6. For each page that plausibly contains staff contacts, call extractContacts on its text. If extractContacts returns a CBO/CFO name but no email, follow the site's staff-directory link to find their email — don't spend a search on it.
+        6. For each page that plausibly contains staff contacts, call extractContacts with the sandboxName and that page's URL (it re-reads the full page itself — you don't pass page text). The browsePage preview is only a snippet, so call extractContacts on any leadership / administration / staff-directory / business-office page even if the names aren't in the preview. If extractContacts returns a CBO/CFO name but no email, follow the site's staff-directory link to find their email — don't spend a search on it.
 
         7. Call saveContact for every real contact. Always pass:
             - districtId=${district.id}
