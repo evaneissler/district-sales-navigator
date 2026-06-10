@@ -116,8 +116,6 @@ export const createBrowser = tool({
   execute: async ({ districtId }) => {
     const sandboxName = `browser-${districtId}-${Date.now()}`;
 
-    // A bare sandbox already ships with Node; we only need its built-in http(s)
-    // modules to fetch pages, so there's nothing to install on create.
     await Sandbox.getOrCreate({ name: sandboxName });
 
     return { sandboxName };
@@ -132,8 +130,6 @@ type FetchResult = {
   raw?: string;
 };
 
-// Runs the fetch script in the sandbox. `maxText` controls how much page text
-// comes back — small for navigation, large for extraction. Never throws.
 async function runFetch(
   sandboxName: string,
   url: string,
@@ -161,8 +157,6 @@ async function runFetch(
   }
 }
 
-// Full page text for extraction — a generous cap so leadership/staff content
-// that sits past a large site nav menu (e.g. Finalsite sites) isn't truncated.
 export async function fetchPageText(
   sandboxName: string,
   url: string,
@@ -180,8 +174,6 @@ export const browsePage = tool({
     url: z.string(),
   }),
 
-  // Modest text cap: enough to judge a page and see its links without bloating
-  // the agent's context across many hops. extractContacts re-reads the full page.
   execute: async ({ sandboxName, url }) => runFetch(sandboxName, url, 12000),
 });
 
