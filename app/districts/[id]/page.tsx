@@ -437,17 +437,18 @@ function SourceLink({ url }: { url: string | null }) {
   if (!url) return null;
   let label = url;
   try {
-    label = new URL(url).host;
+    const u = new URL(url);
+    label = (u.host.replace(/^www\./, "") + u.pathname).replace(/\/$/, "");
   } catch {}
   return (
     <a
       href={url}
       target="_blank"
       rel="noreferrer"
-      className="text-[11px] text-slate-400 hover:text-slate-700 inline-flex items-center gap-0.5 max-w-[240px] truncate"
-      title={url}
+      className="text-[11px] text-slate-400 hover:text-blue-900 hover:underline inline-flex items-center gap-0.5 max-w-[280px] truncate"
+      title={`Verify on source page: ${url}`}
     >
-      <Globe className="size-2.5 shrink-0" /> source: {label}
+      <Globe className="size-2.5 shrink-0" /> verify: {label}
     </a>
   );
 }
