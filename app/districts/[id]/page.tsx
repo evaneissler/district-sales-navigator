@@ -79,41 +79,6 @@ export default function DistrictDetailPage({
   const [tab, setTab] = useState<"contacts" | "clubs">("clubs");
   const [clubQuery, setClubQuery] = useState("");
   const [onlyCustomers, setOnlyCustomers] = useState(false);
-  const [rerunInFlight, setRerunInFlight] = useState<string | null>(null);
-
-  const rerun = async (step: "find-contacts" | "enrich-contacts" | "find-booster-clubs" | "all") => {
-    if (!district) return;
-    if (rerunInFlight) return;
-    const label =
-      step === "find-contacts"
-        ? "find contacts"
-        : step === "enrich-contacts"
-        ? "enrich contacts"
-        : step === "find-booster-clubs"
-        ? "find booster clubs"
-        : "full workflow";
-    if (!confirm(`Re-run ${label} for ${district.name}?`)) return;
-    setRerunInFlight(step);
-    try {
-      if (step === "all") {
-        await fetch("/api/research", {
-          method: "POST",
-          body: JSON.stringify({
-            district_name: district.name,
-            city: district.city,
-            state: district.state,
-          }),
-        });
-      } else {
-        await fetch(`/api/districts/${district.id}/rerun`, {
-          method: "POST",
-          body: JSON.stringify({ step }),
-        });
-      }
-    } finally {
-      setRerunInFlight(null);
-    }
-  };
 
   useEffect(() => {
     let mounted = true;
@@ -213,12 +178,6 @@ export default function DistrictDetailPage({
           />
         </div>
       </section>
-
-      <RerunToolbar
-        status={district.status}
-        inFlight={rerunInFlight}
-        onRerun={rerun}
-      />
 
       <ProgressPanel events={events} status={district.status} />
 
@@ -419,93 +378,6 @@ function TabButton({
     >
       {children}
     </button>
-  );
-}
-
-type RerunChoice =
-  | "find-contacts"
-  | "enrich-contacts"
-  | "find-booster-clubs"
-  | "all";
-
-function RerunToolbar({
-  status,
-  inFlight,
-  onRerun,
-}: {
-  status: string;
-  inFlight: string | null;
-  onRerun: (step: RerunChoice) => void;
-}) {
-  const workflowBusy = status === "researching" || status === "pending";
-  const disabled = workflowBusy || inFlight !== null;
-
-  const buttons: Array<{
-    step: RerunChoice;
-    label: string;
-    icon: React.ReactNode;
-    description: string;
-  }> = [
-    {
-      step: "find-contacts",
-      label: "Find contacts",
-      icon: <UserSearch className="size-3.5" />,
-      description: "Re-discover the district website + CBO/CFO/Superintendent",
-    },
-    {
-      step: "enrich-contacts",
-      label: "Enrich contacts",
-      icon: <Sparkles className="size-3.5" />,
-      description: "Look up phone + LinkedIn for existing contacts",
-    },
-    {
-      step: "find-booster-clubs",
-      label: "Find booster clubs",
-      icon: <Trophy className="size-3.5" />,
-      description: "Re-search ProPublica for booster clubs",
-    },
-    {
-      step: "all",
-      label: "Full workflow",
-      icon: <RefreshCw className="size-3.5" />,
-      description: "Run every step from scratch",
-    },
-  ];
-
-  return (
-    <section className="bg-white border border-slate-200 rounded-xl p-4 mb-6">
-      <div className="flex items-center gap-2 mb-3">
-        <RefreshCw className="size-4 text-blue-900" />
-        <h2 className="text-sm font-medium">Re-run a step</h2>
-        {workflowBusy && (
-          <span className="text-xs text-slate-500">
-            Workflow already in progress — wait for it to finish before kicking off another.
-          </span>
-        )}
-      </div>
-      <div className="flex flex-wrap gap-2">
-        {buttons.map((b) => {
-          const isThisInFlight = inFlight === b.step;
-          return (
-            <button
-              key={b.step}
-              type="button"
-              onClick={() => onRerun(b.step)}
-              disabled={disabled}
-              title={b.description}
-              className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300 disabled:opacity-50 disabled:cursor-not-allowed transition"
-            >
-              {isThisInFlight ? (
-                <Loader2 className="size-3.5 animate-spin" />
-              ) : (
-                b.icon
-              )}
-              {b.label}
-            </button>
-          );
-        })}
-      </div>
-    </section>
   );
 }
 
